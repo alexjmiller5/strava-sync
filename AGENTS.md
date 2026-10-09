@@ -133,6 +133,10 @@ to `main`; it deploys nothing and holds no secrets.
 - Original files are the upload as recorded. A crop in Strava changes the csv
   summary (so the row) but not the original, so samples can run past the
   row's `started_at` / `ended_at`.
+- Strava is the source for its rows: a hand edit to a Strava row's device
+  values in soma is rewritten by the next import whenever Strava's value
+  differs. Crop or delete the activity in Strava, then re-import (`--prune`
+  for deletions).
 - Hub round trips set the pace: a first import takes ~5 s per new activity
   (one row push plus a few stream appends); re-importing an unchanged export
   takes about a minute (write-once file PUTs answer 412, no row writes).
