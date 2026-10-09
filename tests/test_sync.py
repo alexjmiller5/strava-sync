@@ -63,14 +63,33 @@ def test_evening_run_keeps_its_local_date():
     assert (row["date"], row["started_at"]) == ("2026-10-08", "2026-10-09T01:00:00.000Z")
 
 
-def test_raw_files_are_written_before_the_row():
+def test_raw_files_come_first_and_the_edge_follows_its_row():
     sync, _, hub = make([activity()])
     order = []
     hub.put_file = lambda key, data: order.append("file")
-    push = hub.push
+    push, insert = hub.push, hub.insert
     hub.push = lambda table, rows: (order.append(table), push(table, rows))
+    hub.insert = lambda table, rows: (order.append(table), insert(table, rows))
     sync.activity(101)
-    assert order[:3] == ["file", "provenance", "cardio_workouts"]
+    assert order[:3] == ["file", "cardio_workouts", "provenance"]
+
+
+def test_a_missing_origin_edge_is_restored_on_the_next_read():
+    sync, _, hub = make([activity()])
+    sync.activity(101)
+    hub.tables["provenance"].clear()  # e.g. a crash between the row and its edge
+    assert sync.activity(101) == "unchanged"
+    (edge,) = hub.tables["provenance"].values()
+    assert edge["rel"] == "imported_from" and edge["detail"] == {"created_row": 1}
+
+
+def test_an_enriched_race_row_keeps_an_evidence_edge_on_later_reads():
+    sync, _, hub = make([activity(distance=5100.0)], rows=[RACE])
+    assert sync.activity(101) == "enriched"
+    hub.tables["provenance"].clear()
+    assert sync.activity(101) == "unchanged"
+    (edge,) = hub.tables["provenance"].values()
+    assert edge["rel"] == "evidence_of" and edge["to_ref"] == RACE["id"]
 
 
 @pytest.mark.parametrize(

@@ -67,6 +67,15 @@ class Hub:
                 if out.get("rejected"):
                     raise HubError(f"{table}: rejected {out['rejected'][:3]}")
 
+    def insert(self, table: str, rows: list[dict]) -> None:
+        """Insert-only by id: an existing id is left untouched. Raises on any rejection."""
+        now = stamp()
+        rows = [{"updated_at": now, **row} for row in rows]
+        body = {"table": table, "columns": sorted({c for row in rows for c in row}), "rows": rows}
+        out = self._send("POST", "/v1/rows/insert", json=body).json()
+        if out.get("rejected"):
+            raise HubError(f"{table}: rejected {out['rejected'][:3]}")
+
     def put_file(self, key: str, data: bytes) -> None:
         """Write-once retained original; an existing key (412) already holds these bytes."""
         headers = {

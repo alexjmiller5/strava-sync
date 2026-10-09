@@ -105,9 +105,20 @@ class FakeHub:
         ]
 
     def push(self, table, rows):
+        assert table != "provenance", "the profile grants provenance inserts only"
         for row in rows:
             self.pushes.append((table, dict(row)))
             self.tables[table].setdefault(row["id"], {"deleted_at": None}).update(row)
+
+    def insert(self, table, rows):
+        """Insert-only, like the hub's rows/insert; an edge needs a live target row."""
+        assert table == "provenance"
+        for row in rows:
+            target = self.tables[row["to_kind"]].get(row["to_ref"])
+            assert target and not target.get("deleted_at"), "edge target must be a live row"
+            if row["id"] not in self.tables[table]:  # an existing edge is no write at all
+                self.pushes.append((table, dict(row)))
+                self.tables[table][row["id"]] = dict(row)
 
     def put_file(self, key, data):
         self.files.setdefault(key, data)

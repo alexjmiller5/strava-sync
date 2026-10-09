@@ -26,10 +26,14 @@ tests/            pytest
 | `SOMA_HUB_URL`, `SOMA_HUB_TOKEN` | Your hub and a credential enrolled for this app |
 | `RECONCILE_DAYS` | Optional, default 14: how far back the daily reconcile re-reads |
 
-The hub credential needs table read/write for `cardio_workouts` and
-`provenance` (broad `tables:read` + `tables:write` while the hub's narrow
-write grants cannot carry that table's invariants), `streams:append:cardio_strava`,
-and `files:read:raw/strava/` + `files:write:raw/strava/`.
+The hub credential is enrolled with a profile holding exactly
+`tables:read:cardio_workouts`, `tables:write:cardio_workouts`,
+`provenance:create:cardio_workouts` (origin edges onto those rows),
+`streams:append:cardio_strava`, `files:read:raw/strava/` and
+`files:write:raw/strava/`. A server enrolls in two steps:
+`soma login --profile <id> --name "Strava Sync server" --start pending.json`,
+approve the printed URL, then `soma login --claim pending.json --wait` prints
+the token for `SOMA_HUB_TOKEN`.
 
 ## Setup (one time)
 

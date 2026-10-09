@@ -94,3 +94,27 @@ def test_append_posts_the_record_to_the_stream():
         return httpx.Response(200, json={"ok": True})
 
     hub(handler).append("cardio_strava", {"key": "time"})
+
+
+def test_insert_posts_to_the_insert_only_route_and_accepts_existing():
+    bodies = []
+
+    def handler(request):
+        assert request.url.path == "/v1/rows/insert"
+        bodies.append(json.loads(request.content))
+        return httpx.Response(200, json={"inserted": [], "existing": ["e"], "rejected": []})
+
+    hub(handler).insert("provenance", [{"id": "e", "rel": "imported_from"}])
+    assert bodies[0]["table"] == "provenance"
+    assert bodies[0]["columns"] == ["id", "rel", "updated_at"]
+    assert re.fullmatch(
+        r"\d{4}-\d\d-\d\dT\d\d:\d\d:\d\d\.\d{3}Z", bodies[0]["rows"][0]["updated_at"]
+    )
+
+
+def test_insert_rejection_raises():
+    def handler(request):
+        return httpx.Response(200, json={"inserted": [], "existing": [], "rejected": [{"id": "e"}]})
+
+    with pytest.raises(HubError, match="rejected"):
+        hub(handler).insert("provenance", [{"id": "e"}])

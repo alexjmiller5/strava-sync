@@ -19,7 +19,7 @@ state, endpoints, schedules).
   response bytes kept for retention.
 - `core/sync.py` - activity -> row mapping, race-row enrichment, telemetry,
   delete handling, backfill, reconcile.
-- `core/hub.py` - soma hub API client (rows pull/push, files, streams).
+- `core/hub.py` - soma hub API client (rows pull/push/insert, files, streams).
 
 ## Data contract (soma is the record; read its catalog first)
 
@@ -45,7 +45,10 @@ The `cardio_workouts` contract lives in the soma catalog (soma-map
 - Provenance: one edge per row, `from_kind` `takeout`, `from_ref`
   `raw/strava/<id>/` (all retained versions), `asserted_by`
   `script:strava-sync`; `imported_from` + `detail.created_row = 1` for rows
-  it created, `evidence_of` for race rows it enriched. Edge before row.
+  it created, `evidence_of` for race rows it enriched. Inserted through
+  `/v1/rows/insert` AFTER the row (the `provenance:create` grant needs a live
+  target) and re-sent on every read; an existing edge is never changed, so a
+  crash between row and edge heals on the next read.
 - Raw originals are written FIRST, verbatim and content-addressed:
   `raw/strava/<id>/{activity,streams,laps}-<sha256>.json` through
   `PUT /v1/files/` with `If-None-Match: *` (412 = already retained).
@@ -70,8 +73,12 @@ The `cardio_workouts` contract lives in the soma catalog (soma-map
   and secret in the ENV item), with exactly one push subscription.
 - Approved shared-service use: the soma hub through its API with this
   app's own enrolled profile credential (`SOMA_HUB_TOKEN`, profile
-  `strava-sync-v1`), file prefix `raw/strava/`, stream `cardio_strava`.
-  Never soma's D1/R2 bindings or another consumer's token.
+  `strava-sync-v1`: `tables:read:cardio_workouts`,
+  `tables:write:cardio_workouts`, `provenance:create:cardio_workouts`,
+  `streams:append:cardio_strava`, `files:read:raw/strava/`,
+  `files:write:raw/strava/`), file prefix `raw/strava/` (registered in soma
+  AGENTS.md), stream `cardio_strava`. Never soma's D1/R2 bindings or another
+  consumer's token.
 
 ## Strava API policy caveat
 

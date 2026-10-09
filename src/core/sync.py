@@ -198,12 +198,14 @@ class Sync:
                     desired["needs_review"] = review
             else:
                 outcome = "enriched"
-            self._edge(activity_id, target["id"], created=outcome == "inserted")
         if target.get("race_type"):
             desired = {k: v for k, v in desired.items() if k in DEVICE}
         changes = {k: v for k, v in desired.items() if target.get(k) != v}
         if changes:
             self.hub.push(TABLE, [{"id": target["id"], **changes}])
+        # After the row (an edge needs a live target) and on every read: the
+        # insert never touches an existing edge, so a crash in between heals.
+        self._edge(activity_id, target["id"])
         # Samples are re-read only for new rows or a crop (duration/distance changed).
         if outcome != "updated" or {"duration_minutes", "distance_miles"} & changes.keys():
             self._telemetry(activity_id, target["id"], a)
@@ -242,8 +244,9 @@ class Sync:
             )
         return None, None
 
-    def _edge(self, activity_id, target_id: str, created: bool) -> None:
+    def _edge(self, activity_id, target_id: str) -> None:
         ref = raw_prefix(activity_id)  # every retained version of this activity
+        created = target_id == row_id(activity_id)  # else an enriched race row
         edge = {
             "id": f"takeout:{ref}:{TABLE}:{target_id}",
             "from_kind": "takeout",
@@ -255,7 +258,7 @@ class Sync:
             "detail": {"created_row": 1} if created else None,
             "asserted_by": ASSERTED_BY,
         }
-        self.hub.push("provenance", [edge])
+        self.hub.insert("provenance", [edge])
 
     def _telemetry(self, activity_id, target_id: str, a: dict) -> None:
         streams, laps = self.strava.streams(activity_id), self.strava.laps(activity_id)
