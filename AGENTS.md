@@ -23,7 +23,7 @@ state, endpoints, schedules).
 
 ## Data contract (soma is the record; read its catalog first)
 
-The `cardio_workouts` contract lives in the soma catalog (life-map
+The `cardio_workouts` contract lives in the soma catalog (soma-map
 `references/schema.md`). What this app does with it:
 
 - One row per activity, id `strava/activity/<id>`, `recording_source`
