@@ -5,7 +5,7 @@ import re
 import httpx
 import pytest
 
-from core.hub import Hub, HubError
+from strava_sync.hub import Hub, HubError
 
 
 def hub(handler):
@@ -76,10 +76,11 @@ def test_put_file_is_conditional_and_content_checked():
         assert request.url.path == "/v1/files/raw/strava/1/activity-abc.json"
         assert request.headers["if-none-match"] == "*"
         assert request.headers["x-content-sha256"] == hashlib.sha256(data).hexdigest()
+        assert request.headers["content-type"] == "text/csv"
         assert request.content == data
         return httpx.Response(412)  # already retained: same key means same bytes
 
-    hub(handler).put_file("raw/strava/1/activity-abc.json", data)
+    hub(handler).put_file("raw/strava/1/activity-abc.json", data, "text/csv")
 
 
 def test_put_file_failure_raises():

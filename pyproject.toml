@@ -1,19 +1,29 @@
 [project]
 name = "strava-sync"
 version = "0.1.0"
-description = "Mirrors Strava activities into soma cardio_workouts via webhooks, a paced backfill and a daily reconcile"
+description = "Imports Strava bulk exports into soma cardio_workouts: rows, retained originals and samples"
 requires-python = ">=3.13"
 dependencies = [
-    "fastapi>=0.143.0",
+    "fitdecode>=0.11.0",
+    "gpxpy>=1.6.2",
     "httpx>=0.28",
     "pydantic>=2.10",
     "pydantic-settings>=2.7",
     "structlog>=25.1",
 ]
 
+[project.scripts]
+strava-sync = "strava_sync.cli:main"
+
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+
+[tool.hatch.build.targets.wheel]
+packages = ["src/strava_sync"]
+
 [dependency-groups]
 dev = [
-    "modal>=1.0",
     "pytest>=8.3",
     "pytest-mock>=3.14",
     "ruff>=0.9",

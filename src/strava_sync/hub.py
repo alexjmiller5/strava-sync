@@ -76,12 +76,12 @@ class Hub:
         if out.get("rejected"):
             raise HubError(f"{table}: rejected {out['rejected'][:3]}")
 
-    def put_file(self, key: str, data: bytes) -> None:
+    def put_file(self, key: str, data: bytes, content_type="application/octet-stream") -> None:
         """Write-once retained original; an existing key (412) already holds these bytes."""
         headers = {
             "If-None-Match": "*",
             "X-Content-SHA256": hashlib.sha256(data).hexdigest(),
-            "Content-Type": "application/json",
+            "Content-Type": content_type,
         }
         self._send(
             "PUT", f"/v1/files/{quote(key, safe='/')}", ok=(201, 412), headers=headers, content=data

@@ -1,58 +1,48 @@
 # strava-sync
 
-Mirrors your Strava activities into a [soma](https://github.com/alexjmiller5/soma)
-hub's `cardio_workouts` table, on [Modal](https://modal.com): a Strava webhook
-for near-instant sync, a paced one-time backfill, and a daily reconcile for
-edits Strava sends no webhook for. Raw API responses are retained verbatim in
-the hub's file service and GPS/heart-rate samples go to a hub stream.
+Imports a Strava bulk export ("Download your account" zip) into a
+[soma](https://github.com/alexjmiller5/soma) hub's `cardio_workouts` table:
+one row per activity (race results recorded earlier are enriched, never
+duplicated), every original FIT/GPX/TCX file and the `activities.csv`
+retained verbatim in the hub's file service, and GPS / heart-rate samples
+appended to a hub stream. Re-importing a later export only updates rows that
+changed.
 
-## Layout
+Strava's API needs a paid subscription; the bulk export is free.
 
-```
-app.py            Modal shim: image, secret, state Dict, endpoints, cron
-src/core/         business logic (plain Python, portable)
-scripts/          authorize.py (OAuth consent), flagged_activities.py, secrets sync
-tests/            pytest
-.env.tpl          secrets manifest (1Password op:// refs, committed)
-```
+## Usage
 
-## Configuration
+1. Request your archive: strava.com > Settings > My Account > Download or
+   Delete Your Account > Get Started > Request download. Strava emails a link
+   within a few hours; download the zip while signed in to Strava.
+2. Import it:
 
-| Variable | What |
+   ```bash
+   export SOMA_HUB_URL=https://<your hub>  SOMA_HUB_TOKEN=<credential>
+   nix run github:alexjmiller5/strava-sync -- import ~/Downloads/export_12345.zip
+   ```
+
+   or from a checkout, `uv run strava-sync import <zip>`. The command prints a
+   JSON summary (rows inserted / enriched / updated / unchanged, files,
+   samples, and the ids of `missing` activities).
+
+| Option | What |
 |---|---|
-| `STRAVA_CLIENT_ID`, `STRAVA_CLIENT_SECRET` | Your Strava API application ([strava.com/settings/api](https://www.strava.com/settings/api)) |
-| `STRAVA_REFRESH_TOKEN` | From `scripts/authorize.py`; the app keeps the newest rotated one in its Modal Dict |
-| `STRAVA_VERIFY_TOKEN` | Any long random string: the webhook verify token and the callback path secret |
-| `SOMA_HUB_URL`, `SOMA_HUB_TOKEN` | Your hub and a credential enrolled for this app |
-| `RECONCILE_DAYS` | Optional, default 14: how far back the daily reconcile re-reads |
+| `--timezone <IANA zone>` | Zone for the local date of activities whose file records no local time (GPX, TCX, manual entries). Default: this machine's. FIT files carry their own. |
+| `--prune` | Soft-delete Strava rows whose activity is absent from this export (deleted on Strava). Race rows are flagged for review instead. |
 
-The hub credential is enrolled with a profile holding exactly
-`tables:read:cardio_workouts`, `tables:write:cardio_workouts`,
-`provenance:create:cardio_workouts` (origin edges onto those rows),
+## Hub credential
+
+Enroll a profile holding exactly `tables:read:cardio_workouts`,
+`tables:write:cardio_workouts`, `provenance:create:cardio_workouts`,
 `streams:append:cardio_strava`, `files:read:raw/strava/` and
-`files:write:raw/strava/`. A server enrolls in two steps:
-`soma login --profile <id> --name "Strava Sync server" --start pending.json`,
+`files:write:raw/strava/`:
+`soma login --profile <id> --name "Strava Sync" --start pending.json`,
 approve the printed URL, then `soma login --claim pending.json --wait` prints
 the token for `SOMA_HUB_TOKEN`.
 
-## Setup (one time)
-
-1. Create a Strava API application at strava.com/settings/api (any website;
-   Authorization Callback Domain `localhost`). Store the client id and secret.
-2. Generate `STRAVA_VERIFY_TOKEN` (`openssl rand -hex 24`) and enroll a hub
-   credential for the app.
-3. Consent: `op run --env-file=.env.tpl -- uv run scripts/authorize.py`, open the
-   URL while signed in to Strava, approve "View data about your private
-   activities", paste the redirect address back. Store the printed refresh token.
-4. Deploy (push to `main`; CI syncs the Modal secret and deploys).
-5. `just run subscribe` - registers the webhook at the deployed URL.
-6. `just run backfill` - imports history under Strava's read limits
-   (100 per 15 minutes, 1,000 per day); the daily cron finishes it.
-
-A new Strava account or a revoked app repeats steps 3-5. The Strava API terms
-restrict caching API data; keep Strava's own bulk export as the permanent archive.
-
 ## Development
 
-`just test`, `just check`, `just fmt`. Tests run offline against in-memory
-fakes of Strava and the hub.
+`just test`, `just check`, `just fmt`. Tests run offline against an in-memory
+hub and generated export zips. `scripts/flagged_activities.py` lists imported
+rows whose notes flag an incomplete recording.

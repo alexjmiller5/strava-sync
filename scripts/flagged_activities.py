@@ -2,9 +2,9 @@
 
 For the strip/clip follow-up: activities where recording started late, was
 stopped late, or otherwise does not match what happened. Reads the local
-soma replica (`soma sql`); the Strava title and description are the
-row's `notes`. Race rows enriched by a recording keep their official notes,
-so their Strava description is only in the retained raw activity JSON.
+soma replica (`soma sql`); the Strava title, description and private note
+are the row's `notes`. Race rows enriched by a recording keep their official
+notes, so their Strava text is only in the retained activities.csv.
 
 Usage: uv run scripts/flagged_activities.py [--pattern REGEX]
        (or STRAVA_FLAG_PATTERN=...). Prints one JSON object per flagged row.
