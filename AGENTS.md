@@ -133,6 +133,9 @@ to `main`; it deploys nothing and holds no secrets.
 - Original files are the upload as recorded. A crop in Strava changes the csv
   summary (so the row) but not the original, so samples can run past the
   row's `started_at` / `ended_at`.
+- Hub round trips set the pace: a first import takes ~5 s per new activity
+  (one row push plus a few stream appends); re-importing an unchanged export
+  takes about a minute (write-once file PUTs answer 412, no row writes).
 - A crash between a new row and its sample appends leaves that row without
   samples; the next import sees the row unchanged and does not resend them.
 - Hub pushes must carry every write: a rejected row raises, nothing is

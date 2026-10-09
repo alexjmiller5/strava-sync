@@ -17,7 +17,7 @@ import re
 import subprocess
 
 DEFAULT_PATTERN = (
-    r"forg[eo]t(?:ten)? to (?:start|stop|end|pause|turn \w+)"
+    r"forg[eo]t(?:ten)? to \w+"  # start / stop / record / log / include ...
     r"|start(?:ed)? (?:it |recording |the watch )?late|late start"
     r"|(?:didn'?t|never) (?:start|stop|end)"
     r"|(?:left|kept) (?:it|strava|the watch|my watch|recording)[\w ]{0,12}(?:on|running|going)"

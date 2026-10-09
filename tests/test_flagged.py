@@ -41,6 +41,19 @@ def test_default_cues_flag_incomplete_recordings(flagged):
     assert hits[0]["external_id"] == "2" and hits[0]["date"] == "2026-10-02"
 
 
+@pytest.mark.parametrize(
+    "text",
+    [
+        "Forgot to record the first half of this",
+        "Forgot to log the first ten miles ish",
+        "Forgot to include the beginning of the run",
+    ],
+)
+def test_any_forgot_to_phrase_is_a_cue(flagged, text):
+    rows = [{"id": "x", "external_id": "9", "date": "2026-07-12", "name": "Ride", "notes": text}]
+    assert [h["id"] for h in flagged.flagged(rows, flagged.DEFAULT_PATTERN)] == ["x"]
+
+
 def test_custom_pattern(flagged):
     assert [h["id"] for h in flagged.flagged(ROWS, r"morning")] == ["a"]
 
