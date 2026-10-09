@@ -1,4 +1,4 @@
-"""In-memory stand-ins for Strava and the life-data hub, shared by the sync tests."""
+"""In-memory stand-ins for Strava and the soma hub, shared by the sync tests."""
 
 import json
 

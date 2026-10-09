@@ -1,6 +1,6 @@
 # AGENTS.md
 
-Strava Sync - mirrors one athlete's Strava activities into the life-data
+Strava Sync - mirrors one athlete's Strava activities into the soma
 `cardio_workouts` table: a webhook for near-instant sync, a paced one-time
 backfill, and a daily reconcile. Python on Modal.
 
@@ -19,16 +19,16 @@ state, endpoints, schedules).
   response bytes kept for retention.
 - `core/sync.py` - activity -> row mapping, race-row enrichment, telemetry,
   delete handling, backfill, reconcile.
-- `core/hub.py` - life-data hub API client (rows pull/push, files, streams).
+- `core/hub.py` - soma hub API client (rows pull/push, files, streams).
 
-## Data contract (life-data is the record; read its catalog first)
+## Data contract (soma is the record; read its catalog first)
 
-The `cardio_workouts` contract lives in the life-data catalog (life-map
+The `cardio_workouts` contract lives in the soma catalog (life-map
 `references/schema.md`). What this app does with it:
 
 - One row per activity, id `strava/activity/<id>`, `recording_source`
   `Strava`, `external_id` = the Strava activity id. Lookups go by
-  `external_id` first; a row soft-deleted in life-data is never resurrected.
+  `external_id` first; a row soft-deleted in soma is never resurrected.
 - A Running activity on the date of an unlinked race row enriches that row
   when Strava marks it a race (`workout_type` 1) or its distance is within 15%
   of `race_distance_meters`. Only device fields (`DEVICE` in sync.py) are
@@ -68,10 +68,10 @@ The `cardio_workouts` contract lives in the life-data catalog (life-map
   Token`, `Strava Sync CI op Service Account Token` (SA `strava-sync-ci`).
 - A Strava API application on the athlete's own Strava account (client id
   and secret in the ENV item), with exactly one push subscription.
-- Approved shared-service use: the life-data hub through its API with this
-  app's own enrolled profile credential (`LIFE_HUB_TOKEN`, profile
+- Approved shared-service use: the soma hub through its API with this
+  app's own enrolled profile credential (`SOMA_HUB_TOKEN`, profile
   `strava-sync-v1`), file prefix `raw/strava/`, stream `cardio_strava`.
-  Never life-data's D1/R2 bindings or another consumer's token.
+  Never soma's D1/R2 bindings or another consumer's token.
 
 ## Strava API policy caveat
 
@@ -79,7 +79,7 @@ Strava's API Agreement (the June 2026 policy, including its 7-day cache
 clause) restricts storing and reusing API data. Alex chose to mirror his own
 activities through the API anyway; Strava's official bulk export ("Download
 your data") zip is the sanctioned permanent archive alongside it. A Strava
-enforcement change can revoke the app: the life-data rows and retained raw
+enforcement change can revoke the app: the soma rows and retained raw
 files stay, and a fresh bulk export covers anything missed.
 
 ## Endpoint auth (exception to the template rule)

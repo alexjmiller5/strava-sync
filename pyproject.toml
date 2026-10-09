@@ -1,7 +1,7 @@
 [project]
 name = "strava-sync"
 version = "0.1.0"
-description = "Mirrors Strava activities into life-data cardio_workouts via webhooks, a paced backfill and a daily reconcile"
+description = "Mirrors Strava activities into soma cardio_workouts via webhooks, a paced backfill and a daily reconcile"
 requires-python = ">=3.13"
 dependencies = [
     "fastapi>=0.143.0",

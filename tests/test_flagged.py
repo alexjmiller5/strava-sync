@@ -45,7 +45,7 @@ def test_custom_pattern(flagged):
     assert [h["id"] for h in flagged.flagged(ROWS, r"morning")] == ["a"]
 
 
-def test_main_reads_life_data_and_prints_json_lines(flagged, monkeypatch, capsys):
+def test_main_reads_soma_and_prints_json_lines(flagged, monkeypatch, capsys):
     seen = []
 
     def fake_run(cmd, **kw):
@@ -58,7 +58,7 @@ def test_main_reads_life_data_and_prints_json_lines(flagged, monkeypatch, capsys
 
     monkeypatch.setattr(flagged.subprocess, "run", fake_run)
     flagged.main(["--pattern", "train"])
-    assert seen[0][:2] == ["life", "sql"]
+    assert seen[0][:2] == ["soma", "sql"]
     assert "recording_source = 'Strava'" in seen[0][2] and "deleted_at IS NULL" in seen[0][2]
     (line,) = capsys.readouterr().out.splitlines()
     assert json.loads(line)["id"] == "c"

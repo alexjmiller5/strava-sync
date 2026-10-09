@@ -34,7 +34,7 @@ def _sync():
 
     s = Settings()
     strava = Strava(s.strava_client_id, s.strava_client_secret, s.strava_refresh_token, state)
-    return Sync(strava, Hub(s.life_hub_url, s.life_hub_token)), s
+    return Sync(strava, Hub(s.soma_hub_url, s.soma_hub_token)), s
 
 
 # One worker at a time: events for the same activity never race each other.

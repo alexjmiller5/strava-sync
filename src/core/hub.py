@@ -1,4 +1,4 @@
-"""life-data hub client over its HTTP API. Knows a URL and a bearer token, nothing else."""
+"""soma hub client over its HTTP API. Knows a URL and a bearer token, nothing else."""
 
 import hashlib
 from collections import defaultdict

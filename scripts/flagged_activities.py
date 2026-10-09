@@ -2,7 +2,7 @@
 
 For the strip/clip follow-up: activities where recording started late, was
 stopped late, or otherwise does not match what happened. Reads the local
-life-data replica (`life sql`); the Strava title and description are the
+soma replica (`soma sql`); the Strava title and description are the
 row's `notes`. Race rows enriched by a recording keep their official notes,
 so their Strava description is only in the retained raw activity JSON.
 
@@ -47,7 +47,7 @@ def main(argv=None) -> None:
     parser = argparse.ArgumentParser(description=__doc__.splitlines()[0])
     parser.add_argument("--pattern", default=os.environ.get("STRAVA_FLAG_PATTERN", DEFAULT_PATTERN))
     args = parser.parse_args(argv)
-    out = subprocess.run(["life", "sql", QUERY], capture_output=True, text=True, check=True)
+    out = subprocess.run(["soma", "sql", QUERY], capture_output=True, text=True, check=True)
     for hit in flagged(json.loads(out.stdout), args.pattern):
         print(json.dumps(hit))
 

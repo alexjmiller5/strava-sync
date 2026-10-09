@@ -1,6 +1,6 @@
-"""Strava activities -> life-data cardio_workouts rows, retained raw originals and samples.
+"""Strava activities -> soma cardio_workouts rows, retained raw originals and samples.
 
-The table contract (life-data catalog, cardio_workouts): one row per real
+The table contract (soma catalog, cardio_workouts): one row per real
 activity; a Strava recording of a race enriches the race row instead of
 duplicating it; official race fields and known values are never overwritten
 or erased; pace is a query, never stored; point samples go to a producer
@@ -181,7 +181,7 @@ class Sync:
         rows = self._by_external(activity_id)
         live = [r for r in rows if not r["deleted_at"]]
         if rows and not live:
-            return "skipped"  # deleted in life-data on purpose: never resurrect it
+            return "skipped"  # deleted in soma on purpose: never resurrect it
         doc = self.strava.activity(activity_id)
         if doc is None:
             return self._remove(activity_id)

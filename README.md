@@ -1,6 +1,6 @@
 # strava-sync
 
-Mirrors your Strava activities into a [life-data](https://github.com/alexjmiller5/life-data)
+Mirrors your Strava activities into a [soma](https://github.com/alexjmiller5/soma)
 hub's `cardio_workouts` table, on [Modal](https://modal.com): a Strava webhook
 for near-instant sync, a paced one-time backfill, and a daily reconcile for
 edits Strava sends no webhook for. Raw API responses are retained verbatim in
@@ -23,7 +23,7 @@ tests/            pytest
 | `STRAVA_CLIENT_ID`, `STRAVA_CLIENT_SECRET` | Your Strava API application ([strava.com/settings/api](https://www.strava.com/settings/api)) |
 | `STRAVA_REFRESH_TOKEN` | From `scripts/authorize.py`; the app keeps the newest rotated one in its Modal Dict |
 | `STRAVA_VERIFY_TOKEN` | Any long random string: the webhook verify token and the callback path secret |
-| `LIFE_HUB_URL`, `LIFE_HUB_TOKEN` | Your hub and a credential enrolled for this app |
+| `SOMA_HUB_URL`, `SOMA_HUB_TOKEN` | Your hub and a credential enrolled for this app |
 | `RECONCILE_DAYS` | Optional, default 14: how far back the daily reconcile re-reads |
 
 The hub credential needs table read/write for `cardio_workouts` and
