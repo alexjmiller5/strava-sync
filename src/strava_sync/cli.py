@@ -2,8 +2,11 @@
 
 import argparse
 import json
+import sys
 from pathlib import Path
 from zoneinfo import ZoneInfo
+
+import structlog
 
 from strava_sync.config import Settings
 from strava_sync.export import Export
@@ -28,6 +31,8 @@ def main(argv=None) -> None:
         "absence means the activity was deleted on Strava)",
     )
     args = parser.parse_args(argv)
+    # Progress goes to stderr; stdout carries only the JSON summary.
+    structlog.configure(logger_factory=structlog.PrintLoggerFactory(sys.stderr))
     s = Settings()
     zone = ZoneInfo(args.timezone) if args.timezone else None
     sync = Sync(Hub(s.soma_hub_url, s.soma_hub_token), zone=zone)
